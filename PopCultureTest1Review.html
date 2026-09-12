@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pop Culture Jeopardy</title>
+
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #f5f0e8;
+    color: #006747;
+    font-family: 'Georgia', serif;
+    min-height: 100vh;
+    padding: 24px 20px;
+  }
+
+  /* ── MASTHEAD ── */
+  header {
+    max-width: 980px;
+    margin: 0 auto 20px;
+    text-align: center;
+  }
+
+  .masthead-rule { border: none; border-top: 4px double #006747; margin-bottom: 8px; }
+
+  .kicker {
+    font-family: 'Georgia', serif;
+    font-size: 0.7rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #555;
+    margin-bottom: 6px;
+  }
+
+  h1 {
+    font-family: 'Georgia', serif;
+    font-size: clamp(2.2rem, 6vw, 3.8rem);
+    font-weight: 900;
+    line-height: 1;
+    color: #006747;
+    letter-spacing: 1px;
+  }
+
+  .deck {
+    font-family: 'Georgia', serif;
+    font-size: 0.72rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #444;
+    margin-top: 6px;
+  }
+
+  .masthead-rule-bottom { border: none; border-top: 4px double #006747; margin-top: 8px; }
+
+  /* ── SCORE BAR ── */
+  .score-bar {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin: 16px auto;
+    max-width: 980px;
+  }
+
+  .score-box {
+    border: 2px solid #006747;
+    background: #fff;
+    padding: 8px 32px;
+    text-align: center;
+    min-width: 140px;
+  }
+
+  .score-box .label {
+    font-family: 'Georgia', serif;
+    font-size: 0.62rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #666;
+  }
+
+  .score-box .value {
+    font-family: 'Georgia', serif;
+    font-size: 2rem;
+    font-weight: 900;
+    color: #006747;
+  }
+
+  /* ── BOARD ── */
+  .board-wrap {
+    max-width: 980px;
+    margin: 0 auto 30px;
+    border: 6px solid #006747;
+    border-radius: 4px;
+    box-shadow: 0 4px 16px rgba(0, 103, 71, 0.2);
+  }
+
+  .board {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 3px;
+    background: #006747;
+    padding: 3px;
+  }
+
+  .cat-header {
+    background: #006747;
+    color: #FDE500;
+    font-family: 'Georgia', serif;
+    font-size: clamp(0.72rem, 1.3vw, 0.92rem);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1.25;
+    text-align: center;
+    padding: 14px 8px;
+    min-height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cell {
+    background: #fff;
+    min-height: 74px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-family: 'Georgia', serif;
+    font-size: clamp(1.3rem, 2.4vw, 1.75rem);
+    font-weight: 900;
+    color: #006747;
+    border: 1px solid #ddd;
+    transition: background 0.1s;
+  }
+
+  .cell:hover:not(.used) {
+    background: #FDE500;
+  }
+
+  .cell.used {
+    background: #e2ede7;
+    color: transparent;
+    cursor: default;
+    border-color: #ccc;
+  }
+
+  /* ── MODAL ── */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    padding: 20px;
+  }
+
+  .modal {
+    background: #f5f0e8;
+    border: 3px solid #006747;
+    max-width: 660px;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .modal-top {
+    background: #006747;
+    color: #FDE500;
+    padding: 14px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .modal-top .cat-name {
+    font-family: 'Georgia', serif;
+    font-size: 0.72rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #bbb;
+  }
+
+  .modal-top .points {
+    font-family: 'Georgia', serif;
+    font-size: 1.6rem;
+    font-weight: 900;
+  }
+
+  .modal-body { padding: 28px 26px 22px; }
+
+  .clue-text {
+    font-family: 'Georgia', serif;
+    font-size: 1.15rem;
+    line-height: 1.65;
+    color: #006747;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+
+  .answer-box {
+    border: 2px solid #006747;
+    background: #fff;
+    padding: 16px 18px;
+    margin-bottom: 20px;
+    display: none;
+  }
+
+  .answer-box.show { display: block; }
+
+  .answer-box .ans-label {
+    font-family: 'Georgia', serif;
+    font-size: 0.62rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #777;
+    margin-bottom: 6px;
+  }
+
+  .answer-box .ans-text {
+    font-family: 'Georgia', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #006747;
+  }
+
+  .answer-box .ans-explanation {
+    font-family: 'Georgia', serif;
+    font-size: 0.88rem;
+    color: #444;
+    margin-top: 8px;
+    line-height: 1.6;
+    font-style: italic;
+    border-top: 1px solid #ddd;
+    padding-top: 8px;
+  }
+
+  /* ── BUTTONS ── */
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  button {
+    font-family: 'Georgia', serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 10px 24px;
+    border: 2px solid #006747;
+    cursor: pointer;
+    background: #fff;
+    color: #006747;
+    transition: background 0.12s, color 0.12s;
+  }
+
+  button:hover { background: #006747; color: #FDE500; }
+
+  .btn-correct { border-color: #2a6e3f; color: #2a6e3f; }
+  .btn-correct:hover { background: #2a6e3f; color: #fff; }
+
+  .btn-wrong { border-color: #8b1a1a; color: #8b1a1a; }
+  .btn-wrong:hover { background: #8b1a1a; color: #fff; }
+
+  .btn-skip { border-color: #999; color: #888; }
+  .btn-skip:hover { background: #999; color: #fff; }
+
+  /* ── END SCREEN ── */
+  .end-screen {
+    position: fixed; inset: 0;
+    background: #f5f0e8;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px;
+    z-index: 100;
+    border: 10px double #006747;
+    margin: 16px;
+  }
+
+  .end-screen.show { display: flex; }
+
+  .end-screen .end-label {
+    font-family: 'Georgia', serif;
+    font-size: 0.7rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #777;
+    margin-bottom: 10px;
+  }
+
+  .end-screen h2 {
+    font-family: 'Georgia', serif;
+    font-size: clamp(2rem, 6vw, 3.4rem);
+    font-weight: 900;
+    color: #006747;
+    margin-bottom: 10px;
+  }
+
+  .end-screen .final {
+    font-family: 'Georgia', serif;
+    font-size: clamp(1.4rem, 4vw, 2.2rem);
+    font-weight: 700;
+    color: #006747;
+    margin-bottom: 6px;
+  }
+
+  .end-screen .grade {
+    font-family: 'Georgia', serif;
+    font-size: 1rem;
+    font-style: italic;
+    color: #444;
+    max-width: 420px;
+    line-height: 1.6;
+    margin-bottom: 32px;
+    border-top: 1px solid #bbb;
+    border-bottom: 1px solid #bbb;
+    padding: 12px 0;
+  }
+
+  .btn-restart {
+    font-family: 'Georgia', serif;
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+    padding: 12px 36px;
+    background: #006747;
+    color: #FDE500;
+    border: 2px solid #006747;
+  }
+
+  .btn-restart:hover { background: #444; }
+
+  @media (max-width: 580px) {
+    .cell { min-height: 54px; }
+    .cat-header { min-height: 52px; padding: 8px 4px; }
+    .score-box { padding: 8px 16px; min-width: 100px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── MASTHEAD ── -->
+<header>
+  <hr class="masthead-rule">
+  <div class="kicker">Created by Matt Cohen - UT Austin</div>
+  <h1>Pop Culture Jeopardy</h1>
+  <!-- ✏️ Change your subtitle/topic below -->
+  <div class="deck">Test 1 Review</div>
+  <hr class="masthead-rule-bottom">
+</header>
+
+<!-- ── SCORE ── -->
+<div class="score-bar" style="flex-wrap: wrap;">
+  <div class="score-box">
+    <div class="label">Team 1</div>
+    <div class="value" id="score-0">$0</div>
+  </div>
+  <div class="score-box">
+    <div class="label">Team 2</div>
+    <div class="value" id="score-1">$0</div>
+  </div>
+  <div class="score-box">
+    <div class="label">Team 3</div>
+    <div class="value" id="score-2">$0</div>
+  </div>
+  <div class="score-box">
+    <div class="label">Team 4</div>
+    <div class="value" id="score-3">$0</div>
+  </div>
+</div>
+
+<!-- ── BOARD ── -->
+<div class="board-wrap">
+  <div class="board" id="board"></div>
+</div>
+
+<!-- ── END SCREEN ── -->
+<div class="end-screen" id="endScreen">
+  <div class="end-label">Final Results</div>
+  <h2>Game Over</h2>
+  <div class="final" id="finalScore"></div>
+  <div class="grade" id="grade"></div>
+  <button class="btn-restart" onclick="restart()">Play Again</button>
+</div>
+
+<script>
+
+// ============================================================
+//  ✏️  YOUR CONTENT — EDIT HERE
+// ============================================================
+//
+//  5 categories · 4 clues each · values: 200 / 400 / 600 / 800
+//  Leave explanation as "" if you don't need the extra context line.
+//
+// ============================================================
+
+const CATEGORIES = [
+
+  {
+    name: "Philosophers & Cultural Critics",
+    clues: [
+      { value: 200,  clue: "This ancient philosopher believed philosophy was the only proper culture and wanted to ban poets and painters because art is a mere imitation of reality", answer: "Who is Plato"},
+      { value: 400,  clue: "In 'On the Aesthetic Education of Man,' this German thinker argued that fine arts elevate human taste and can spark a new era of democracy", answer: "Who is Friedrich Schiller"},
+      { value: 600,  clue: "This political analyst famously argued that the average person lacks critical thinking for democracy, declaring that 'the masses are asses'", answer: "Who is Walter Lippmann"},
+      { value: 800, clue: "In his book 'Culture and Anarchy', this British critic argued that enlightened education serves as social glue to combat societal disorder", answer: "Who is Matthew Arnold"},
+    ]
+  },
+
+  {
+    name: "Media Economics & Industry Strategies",
+    clues: [
+      { value: 200,  clue: "Studios frequently release sequels, spinoffs, and reboots of established franchises to execute this financial strategy.", answer: "What is Minimizing Risk?" },
+      { value: 400,  clue: "Licensing movie themes for TV commercials or placing theatrical films onto streaming platforms like Netflix are prime examples of this distribution strategy.", answer: "What are Secondary Markets?" },
+      { value: 600,  clue: "Selling themed action figures, candy, clothing, or video games directly to consumers extends brand engagement through this practice.", answer: "What is Merchandising?" },
+      { value: 800,  clue: "Media companies shift financial risk onto individual creators by using freelancers and this payment system, where creators earn money only if their work sells.", answer: "What is the Royalty System? (also accepts Shifting Risk)" }
+    ]
+  },
+
+  {
+    name: "Pop Culture & Politics",
+    clues: [
+      { value: 200,  clue: "President William Henry Harrison pioneered political campaign music during the 1840 election with this famous hit song.", answer: "What is \"Tippecanoe and Tyler Too\"?" },
+      { value: 400,  clue: "Coined by Joseph Nye, this term describes a nation's ability to shape global preferences through cultural attraction (like movies and K-Pop) rather than military force.", answer: "What is Soft Power?" },
+      { value: 600,  clue: "Before electronic media existed, politicians traveled by train to speak to local crowds—a tradition known by this term that is replaced today by television appearances.", answer: "What is a Whistle Stop Tour?" },
+      { value: 800,  clue: "Although soft news generally does not increase civic knowledge, research shows these specific humorous TV formats actually boost political engagement and voting turnout.", answer: "What are Talk Shows and Late-Night Comedies?" }
+    ]
+  },
+
+  {
+    name: "Media Theories & Effects",
+    clues: [
+      { value: 200,  clue: "Marshall McLuhan coined this famous phrase to explain that technology itself alters human perception and social structures, regardless of the content consumed.", answer: "What is \"The medium is the message\"?" },
+      { value: 400,  clue: "According to Marcel Danesi, this pattern explains how youth-driven \"low\" culture (like early rock 'n' roll or hip-hop) eventually transforms into mainstream culture.", answer: "What is the Transference Cycle?" },
+      { value: 600,  clue: "This cognitive principle explains why human brains recall 65% of visual information after three days compared to only 10% of written text.", answer: "What is the Picture Superiority Effect?" },
+      { value: 800,  clue: "Edward Herman and Noam Chomsky proposed this model to show how elite media ownership and advertising filters mold public opinion to support status quo capitalism.", answer: "What is the Propaganda Model? (also accepts Manufacturing Consent)" }
+    ]
+  },
+
+  {
+    name: "Journalism & Branding",
+    clues: [
+      { value: 200,  clue: "Launched in the 1830s for one cent, this paper type democratized news by introducing crime stories, comics, and human-interest pieces to everyday readers.", answer: "What is the Penny Press?" },
+      { value: 400,  clue: "Rather than relying on formal degrees or job titles, modern media experts define a true journalist primarily by adherence to these practices.", answer: "What are Professional Norms and Ethics? (such as fact-checking, objectivity, and fairness)" },
+      { value: 600,  clue: "Publicists, influencers, and media critics act as these cultural guardians, filtering information and deciding which creators reach the public.", answer: "What are Gatekeepers?" },
+      { value: 800,  clue: "Icons like Martha Stewart and Oprah Winfrey build vast empires across print, TV, and product lines by blending media formats through these two principles.", answer: "What are Synergy and Convergence?" }
+    ]
+  }
+
+];
+
+// ✏️ End-of-game messages — edit to taste
+function gradePlayer(score) {
+  if (score >= 8000) return "Outstanding. Top of the class.";
+  if (score >= 5000) return "Strong performance — well studied.";
+  if (score >= 2000) return "Decent effort. Review your notes.";
+  if (score >= 0)    return "Keep practicing — hit the textbook.";
+  return "Back to square one. Try again.";
+}
+
+// ============================================================
+//  🔧  GAME ENGINE — no need to edit below here
+// ============================================================
+
+let scores = [0, 0, 0, 0];
+let used = 0;
+const total = 20;
+let active = null;
+
+function buildBoard() {
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+  CATEGORIES.forEach(c => {
+    const h = document.createElement('div');
+    h.className = 'cat-header';
+    h.textContent = c.name;
+    board.appendChild(h);
+  });
+  for (let row = 0; row < 5; row++) {
+    CATEGORIES.forEach((cat, col) => {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.textContent = '$' + cat.clues[row].value;
+      cell.addEventListener('click', () => openClue(col, row, cell));
+      board.appendChild(cell);
+    });
+  }
+}
+
+function openClue(col, row, cell) {
+  if (cell.classList.contains('used')) return;
+  const clue = CATEGORIES[col].clues[row];
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay';
+  overlay.innerHTML = `
+    <div class="modal">
+      <div class="modal-top">
+        <span class="cat-name">${CATEGORIES[col].name}</span>
+        <span class="points">$${clue.value}</span>
+      </div>
+      <div class="modal-body">
+        <div class="clue-text">${clue.clue}</div>
+        <div class="answer-box" id="ansBox">
+          <div class="ans-label">Answer</div>
+          <div class="ans-text">${clue.answer}</div>
+          ${clue.explanation ? `<div class="ans-explanation">${clue.explanation}</div>` : ''}
+        </div>
+        <div class="btn-row" id="btnRow">
+          <button onclick="reveal()">Check Answer</button>
+          <button class="btn-skip" onclick="skip()">Pass</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  active = { overlay, cell, clue };
+}
+
+function reveal() {
+  document.getElementById('ansBox').classList.add('show');
+  document.getElementById('btnRow').innerHTML = `
+    <div style="width:100%;text-align:center;margin-bottom:8px;font-size:0.75rem;text-transform:uppercase;color:#555;letter-spacing:2px;font-weight:700;">Award Points To:</div>
+    <button class="btn-correct" onclick="assignTeam(0)">Team 1</button>
+    <button class="btn-correct" onclick="assignTeam(1)">Team 2</button>
+    <button class="btn-correct" onclick="assignTeam(2)">Team 3</button>
+    <button class="btn-correct" onclick="assignTeam(3)">Team 4</button>
+    <button class="btn-wrong" onclick="assignTeam(-1)">Nobody</button>`;
+}
+
+function assignTeam(teamIndex) {
+  const { overlay, cell, clue } = active;
+  cell.classList.add('used');
+  used++;
+  
+  if (teamIndex >= 0) {
+    scores[teamIndex] += clue.value;
+    document.getElementById('score-' + teamIndex).textContent =
+      (scores[teamIndex] < 0 ? '-$' : '$') + Math.abs(scores[teamIndex]).toLocaleString();
+  }
+  
+  document.body.removeChild(overlay);
+  active = null;
+  if (used === total) setTimeout(end, 400);
+}
+
+function skip() {
+  active.cell.classList.add('used');
+  used++;
+  document.body.removeChild(active.overlay);
+  active = null;
+  if (used === total) setTimeout(end, 400);
+}
+
+function end() {
+  let maxScore = Math.max(...scores);
+  let winners = [];
+  scores.forEach((s, i) => { if (s === maxScore) winners.push('Team ' + (i+1)); });
+  
+  document.getElementById('finalScore').textContent = 
+    winners.join(' & ') + ' win(s) with ' + (maxScore < 0 ? '-$' : '$') + Math.abs(maxScore).toLocaleString() + '!';
+    
+  document.getElementById('grade').textContent = gradePlayer(maxScore);
+  document.getElementById('endScreen').classList.add('show');
+}
+
+function restart() {
+  scores = [0, 0, 0, 0]; used = 0; active = null;
+  for(let i=0; i<4; i++) {
+    document.getElementById('score-' + i).textContent = '$0';
+  }
+  document.getElementById('endScreen').classList.remove('show');
+  buildBoard();
+}
+
+buildBoard();
+</script>
+</body>
+</html>
